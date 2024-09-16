@@ -16,63 +16,102 @@ interface Todo {
 function TodoList() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTodos();
   }, []);
 
   const fetchTodos = async () => {
-    const response = await fetch("/api/todos");
-    const data = await response.json();
-    setTodos(data);
+    try {
+      const response = await fetch("/api/todos");
+      if (response.ok) {
+        const data = await response.json();
+        setTodos(data);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to fetch todos");
+      }
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+      setError("Failed to fetch todos");
+    }
   };
 
   const addTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodo.trim()) return;
-    const response = await fetch("/api/todos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ title: newTodo }),
-    });
-    const data = await response.json();
-    setTodos([
-      ...todos,
-      { _id: data.insertedId, title: newTodo, completed: false },
-    ]);
-    setNewTodo("");
+    try {
+      const response = await fetch("/api/todos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title: newTodo }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTodos([...todos, data]);
+        setNewTodo("");
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to add todo");
+      }
+    } catch (error) {
+      console.error("Error adding todo:", error);
+      setError("Failed to add todo");
+    }
   };
 
   const toggleTodo = async (id: string, completed: boolean) => {
-    await fetch("/api/todos", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id, completed }),
-    });
-    setTodos(
-      todos.map((todo) => (todo._id === id ? { ...todo, completed } : todo))
-    );
+    try {
+      const response = await fetch("/api/todos", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, completed }),
+      });
+      if (response.ok) {
+        setTodos(
+          todos.map((todo) => (todo._id === id ? { ...todo, completed } : todo))
+        );
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to update todo");
+      }
+    } catch (error) {
+      console.error("Error updating todo:", error);
+      setError("Failed to update todo");
+    }
   };
 
   const deleteTodo = async (id: string) => {
-    await fetch("/api/todos", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id }),
-    });
-    setTodos(todos.filter((todo) => todo._id !== id));
+    try {
+      const response = await fetch("/api/todos", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (response.ok) {
+        setTodos(todos.filter((todo) => todo._id !== id));
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || "Failed to delete todo");
+      }
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      setError("Failed to delete todo");
+    }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
-      <h1 className="text-2xl  text-black font-bold mb-4">Todo List</h1>
-      <form onSubmit={addTodo} className="flex  text-black mb-4">
+      <h1 className="text-2xl text-black font-bold mb-4">Todo List</h1>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      <form onSubmit={addTodo} className="flex text-black mb-4">
         <Input
           type="text"
           value={newTodo}
