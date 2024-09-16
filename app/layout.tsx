@@ -1,14 +1,5 @@
+import { Providers } from "./providers";
 import "./globals.css";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Todo List App",
-  description:
-    "A simple todo list application built with Next.js, MongoDB, and shadcn/ui",
-};
 
 export default function RootLayout({
   children,
@@ -17,7 +8,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
